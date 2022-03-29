@@ -1,0 +1,51 @@
+// A sample main function which parse command-line arguments with ngclp.
+
+use std::env;
+
+use anyhow;
+
+use ngclp::{next_index, parse, unwrap_argument};
+
+fn main() -> anyhow::Result<()> {
+    let argv_store: Vec<String> = env::args().collect();
+    let argv: Vec<&str> = argv_store.iter().map(|item| item.as_ref()).collect();
+
+    if argv.len() == 1 {
+        println!("No arguments.");
+        return Ok(());
+    }
+
+    let mut argv_index = 1;
+    loop {
+        let pr = parse(&argv, argv_index)?;
+        let eat = match pr.0 {
+            "-h" | "--help" => { // help
+                println!("Usage: ngclip [-h] [-o OUTPUT] [-v] <file>...");
+                return Ok(())
+            }
+
+            "-o" | "--output" => { // option (takes one argument)
+                let output = unwrap_argument(pr)?;
+                println!("output = {}", output);
+                2 // 1 for the option + 1 for argument
+            }
+
+            "-v" | "--verbose" => { // flag (does not take argument)
+                println!("verbose");
+                1 // 1 for the flag
+            }
+
+            a => { // argument (does not take argument)
+                println!("file = {}", a);
+                1 // 1 for the argument
+            }
+        };
+
+        argv_index = next_index(&argv, argv_index, eat)?;
+        if argv_index >= argv.len() {
+            break;
+        }
+    }
+
+    Ok(())
+}
