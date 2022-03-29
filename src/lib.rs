@@ -19,10 +19,10 @@ pub enum ParseError {
     #[error("internal, index out of range: {}", .index)]
     InternalIndexOutOfRange { index: usize },
 
-    #[error("argument is given for flag: {}", .name)]
+    #[error("flag can not take argument: {}", .name)]
     FlagWithArgument { name: String },
 
-    #[error("argument missing for option: {}", .name)]
+    #[error("option missing argument: {}", .name)]
     OptionWithoutArgument { name: String },
 
     #[error("invalid argument: {}", .value)]

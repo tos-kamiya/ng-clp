@@ -35,7 +35,7 @@ fn main() -> anyhow::Result<()> {
                 1 // 1 for the flag
             }
 
-            "--" => { // separator (the remaining items are arguments)
+            "--" => { // separator (the remaining items are arguments, including items having prefix `-`)
                 break;
             }
 
