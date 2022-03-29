@@ -4,6 +4,10 @@ use std::result;
 
 use thiserror::Error;
 
+pub fn is_argument(a: &str) -> bool {
+    a == "-" || a == "--" || !a.starts_with('-')
+}
+
 #[derive(Error, Debug, PartialEq)]
 pub enum ParseError {
     #[error("internal, argument can not have argument: {}", arg)]
@@ -20,11 +24,15 @@ pub enum ParseError {
 
     #[error("argument missing for option: {}", .name)]
     OptionWithoutArgument { name: String },
+
+    #[error("invalid argument: {}", .value)]
+    InvalidArgument { value: String },
+    
+    #[error("unknown flag or option: {}", .name)]
+    UnknownFlagOrOption { name: String },
 }
 
 pub fn parse<'s, 'a>(argv: &'a [&'s str], index: usize) -> result::Result<(&'s str, Option<&'s str>), ParseError> {
-    let is_argument = |a: &str| a == "-" || a == "--" || !a.starts_with("-");
-
     if index >= argv.len() {
         return Err(ParseError::InternalIndexOutOfRange { index: index });
     }
@@ -58,16 +66,30 @@ pub fn parse<'s, 'a>(argv: &'a [&'s str], index: usize) -> result::Result<(&'s s
 }
 
 pub fn next_index(argv: &[&str], index: usize, eat: usize) -> result::Result<usize, ParseError> {
-    assert!(eat > 0);
-
-    let is_argument = |a: &str| a == "-" || a == "--" || !a.starts_with("-");
-
     if index >= argv.len() {
         return Err(ParseError::InternalIndexOutOfRange { index });
     }
 
     let a = argv[index];
-    if !(eat == 1 || eat == 2) {
+    if eat == 0 {
+        if is_argument(a) {
+            return Err(ParseError::InvalidArgument { value: a.to_string() });
+        } else if a.starts_with("--") {
+            if let Some(i) = a.find('=') {
+                return Err(ParseError::UnknownFlagOrOption { name: a[..i].to_string() });
+            } else {
+                return Err(ParseError::UnknownFlagOrOption { name: a.to_string() });
+            }
+        } else if a.starts_with('-') {
+            if a.len() > 2 {
+                return Err(ParseError::UnknownFlagOrOption { name: a[..2].to_string() });
+            } else {
+                return Err(ParseError::UnknownFlagOrOption { name: a.to_string() });
+            }
+        } else {
+            unreachable!();
+        }
+    } else if !(eat == 1 || eat == 2) {
         return Err(ParseError::InternalInvalidEatCount { eat });
     }
 

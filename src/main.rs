@@ -4,7 +4,7 @@ use std::env;
 
 use anyhow;
 
-use ngclp::{next_index, parse, unwrap_argument};
+use ngclp::{is_argument, next_index, parse, unwrap_argument};
 
 fn main() -> anyhow::Result<()> {
     let argv_store: Vec<String> = env::args().collect();
@@ -20,7 +20,7 @@ fn main() -> anyhow::Result<()> {
         let pr = parse(&argv, argv_index)?;
         let eat = match pr.0 {
             "-h" | "--help" => { // help
-                println!("Usage: ngclip [-h] [-o OUTPUT] [-v] <file>...");
+                println!("Usage: ngclp [-h] [-o OUTPUT] [-v] <file>...");
                 return Ok(())
             }
 
@@ -35,16 +35,26 @@ fn main() -> anyhow::Result<()> {
                 1 // 1 for the flag
             }
 
-            a => { // argument (does not take argument)
+            "--" => { // separator (the remaining items are arguments)
+                break;
+            }
+
+            a if is_argument(a) => { // argument (does not take argument)
                 println!("file = {}", a);
                 1 // 1 for the argument
             }
+
+            _ => 0 // unknown flag/option
         };
 
         argv_index = next_index(&argv, argv_index, eat)?;
         if argv_index >= argv.len() {
             break;
         }
+    }
+
+    if argv_index < argv.len() {
+        println!("remaining argv items = {}", argv[argv_index..].join(","));
     }
 
     Ok(())
