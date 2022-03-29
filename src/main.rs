@@ -1,8 +1,4 @@
-// A sample main function which parse command-line arguments with ngclp.
-
 use std::env;
-
-use anyhow;
 
 use ngclp::{is_argument, next_index, parse, unwrap_argument};
 
