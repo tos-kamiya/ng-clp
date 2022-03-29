@@ -19,24 +19,32 @@ fn main() -> anyhow::Result<()> {
     loop {
         let pr = parse(&argv, argv_index)?;
         let eat = match pr.0 {
+            "-h" | "--help" => { // help
+                println!("Usage: ngclp [-h] [-o OUTPUT] [-v] <file>...");
+                return Ok(())
+            }
+
+            "-o" | "--output" => { // option (takes one argument)
+                let output = unwrap_argument(pr)?;
+                println!("output = {}", output);
+                2 // 1 for the option + 1 for argument
+            }
+
+            "-v" | "--verbose" => { // flag (does not take argument)
+                println!("verbose");
+                1 // 1 for the flag
+            }
+
             "--" => { // separator (the remaining items are arguments, including items having prefix `-`)
                 break;
             }
 
             a if is_argument(a) => { // argument (does not take argument)
-                println!("Argument: {}", a);
+                println!("file = {}", a);
                 1 // 1 for the argument
             }
 
-            fo => { // flag or option
-                if let Ok(a) = unwrap_argument(pr) {
-                    println!("Option: {} {}", fo, a);
-                    2 // 1 for the option + 1 for argument
-                } else {
-                    println!("Flag: {}", fo);
-                    1 // 1 for the flag
-                }
-            }
+            _ => 0 // unknown flag/option
         };
 
         argv_index = next_index(&argv, argv_index, eat)?;
