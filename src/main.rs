@@ -1,6 +1,6 @@
 use std::env;
 
-use ngclp::{is_argument, next_index, parse, unwrap_argument};
+use ng_clp::{is_argument, next_index, parse, unwrap_argument};
 
 fn main() -> anyhow::Result<()> {
     let argv_store: Vec<String> = env::args().collect();

@@ -1,5 +1,3 @@
-#![doc = include_str!("../README.md")]
-
 use std::result;
 
 use thiserror::Error;
