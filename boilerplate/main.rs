@@ -4,6 +4,9 @@ use std::env;
 
 use ng_clp::{is_argument, next_index, parse, unwrap_argument};
 
+const NAME: &str = env!("CARGO_PKG_NAME");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 fn main() -> anyhow::Result<()> {
     let argv_store: Vec<String> = env::args().collect();
     let argv: Vec<&str> = argv_store.iter().map(|item| item.as_ref()).collect();
@@ -18,7 +21,11 @@ fn main() -> anyhow::Result<()> {
         let pr = parse(&argv, argv_index)?;
         let eat = match pr.0 {
             "-h" | "--help" => { // help
-                println!("Usage: ng-clp [-h] [-o OUTPUT] [-v] <file>...");
+                println!("Usage: {} [-h] [-o OUTPUT] [-v] <file>...", NAME);
+                return Ok(())
+            }
+            "-V" | "--version" => {
+                println!("{} {}", NAME, VERSION);
                 return Ok(())
             }
 
@@ -34,6 +41,7 @@ fn main() -> anyhow::Result<()> {
             }
 
             "--" => { // separator (the remaining items are arguments, including items having prefix `-`)
+                argv_index += 1; // skip the `--`
                 break;
             }
 

@@ -41,11 +41,12 @@ ng-clp allows treating with the command line in the following two interpretation
 
 ## How do I use ng-clp?
 
-(1) Add a dependency to ng-clp in `Cargo.toml`:
+(1) Add a dependency to `ng-clp` and `anyhow` in `Cargo.toml`:
 
 ```
 [dependencies]
 ng-clp = "0.1"
+anyhow = "1.0"
 ```
 
 (2) Copy the boilerplate code [boilerplate/main.rs](boilerplate/main.rs) in your `main.rs` and modify it.

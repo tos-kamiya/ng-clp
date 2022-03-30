@@ -16,6 +16,7 @@ fn main() -> anyhow::Result<()> {
         let pr = parse(&argv, argv_index)?;
         let eat = match pr.0 {
             "--" => { // separator (the remaining items are arguments, including items having prefix `-`)
+                argv_index += 1; // skip the `--`
                 break;
             }
 
