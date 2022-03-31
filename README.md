@@ -45,7 +45,7 @@ ng-clp allows treating with the command line in the following two interpretation
 
 ```
 [dependencies]
-ng-clp = "0.2"
+ng-clp = "0.3"
 anyhow = "1.0"
 ```
 
