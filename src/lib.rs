@@ -2,8 +2,12 @@ use std::result;
 
 use thiserror::Error;
 
+pub fn is_invalid(a: &str) -> bool {
+    a.starts_with("---") || a.starts_with("--=")
+}
+
 pub fn is_argument(a: &str) -> bool {
-    a == "-" || !a.starts_with('-')
+    !is_invalid(a) && (a == "-" || !a.starts_with('-'))
 }
 
 pub fn is_separator(a: &str) -> bool {
@@ -11,7 +15,7 @@ pub fn is_separator(a: &str) -> bool {
 }
 
 pub fn is_flag_or_option(a: &str) -> bool {
-    !is_argument(a) && !is_separator(a)
+    !is_invalid(a) && !is_argument(a) && !is_separator(a)
 }
 
 #[derive(Error, Debug, PartialEq)]
@@ -42,6 +46,9 @@ pub enum ParseError {
 
     #[error("unknown flag or option: {}", .name)]
     UnknownFlagOrOption { name: String },
+
+    #[error("invalid string: {}", .s)]
+    InvalidString { s: String },
 }
 
 pub fn parse<'s, 'a>(
@@ -53,7 +60,9 @@ pub fn parse<'s, 'a>(
     }
 
     let a = argv[index];
-    if is_argument(a) || is_separator(a) {
+    if is_invalid(a) {
+        return Err(ParseError::InvalidString { s: a.to_string() });
+    } else if is_argument(a) || is_separator(a) {
         Ok((a, None))
     } else if a.starts_with("--") {
         if let Some(i) = a.find('=') {
@@ -65,7 +74,8 @@ pub fn parse<'s, 'a>(
                 Ok((a, None))
             }
         }
-    } else if a.starts_with('-') {
+    } else {
+        assert!(a.starts_with('-'));
         if a.len() > 2 {
             Ok((&a[..2], Some(&a[2..])))
         } else {
@@ -75,8 +85,6 @@ pub fn parse<'s, 'a>(
                 Ok((a, None))
             }
         }
-    } else {
-        unreachable!();
     }
 }
 
@@ -87,7 +95,9 @@ pub fn next_index(argv: &[&str], index: usize, eat: usize) -> result::Result<usi
 
     let a = argv[index];
     if eat == 0 {
-        if is_argument(a) {
+        if is_invalid(a) {
+            return Err(ParseError::InvalidString { s: a.to_string() });
+        } else if is_argument(a) {
             return Err(ParseError::InvalidArgument {
                 value: a.to_string(),
             });
@@ -111,7 +121,9 @@ pub fn next_index(argv: &[&str], index: usize, eat: usize) -> result::Result<usi
         return Err(ParseError::InternalInvalidEatCount { eat });
     }
 
-    let ni = if is_argument(a) {
+    let ni = if is_invalid(a) {
+        return Err(ParseError::InvalidString { s: a.to_string() });
+    } else if is_argument(a) {
         if eat == 2 {
             return Err(ParseError::InternalArgumentCanNotHaveArgument { arg: a.to_string() });
         }
