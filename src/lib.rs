@@ -51,6 +51,10 @@ pub enum ParseError {
     InvalidString { s: String },
 }
 
+fn _s(s: &str) -> String {
+    s.to_string()
+}
+
 pub fn parse<'s, 'a>(
     argv: &'a [&'s str],
     index: usize,
@@ -61,7 +65,7 @@ pub fn parse<'s, 'a>(
 
     let a = argv[index];
     if is_invalid(a) {
-        return Err(ParseError::InvalidString { s: a.to_string() });
+        Err(ParseError::InvalidString { s: _s(a) })
     } else if is_argument(a) || is_separator(a) {
         Ok((a, None))
     } else if a.starts_with("--") {
@@ -96,24 +100,16 @@ pub fn next_index(argv: &[&str], index: usize, eat: usize) -> result::Result<usi
     let a = argv[index];
     if eat == 0 {
         if is_invalid(a) {
-            return Err(ParseError::InvalidString { s: a.to_string() });
+            return Err(ParseError::InvalidString { s: _s(a) });
         } else if is_argument(a) {
-            return Err(ParseError::InvalidArgument {
-                value: a.to_string(),
-            });
+            return Err(ParseError::InvalidArgument { value: _s(a) });
         } else if is_separator(a) {
-            return Err(ParseError::UnexpectedSeparator {
-                value: a.to_string(),
-            });
+            return Err(ParseError::UnexpectedSeparator { value: _s(a) });
         } else if is_flag_or_option(a) {
             if let Some(i) = a.find('=') {
-                return Err(ParseError::UnknownFlagOrOption {
-                    name: a[..i].to_string(),
-                });
+                return Err(ParseError::UnknownFlagOrOption { name: _s(&a[..i]) });
             } else {
-                return Err(ParseError::UnknownFlagOrOption {
-                    name: a.to_string(),
-                });
+                return Err(ParseError::UnknownFlagOrOption { name: _s(a) });
             }
         } else {
         }
@@ -122,10 +118,10 @@ pub fn next_index(argv: &[&str], index: usize, eat: usize) -> result::Result<usi
     }
 
     let ni = if is_invalid(a) {
-        return Err(ParseError::InvalidString { s: a.to_string() });
+        return Err(ParseError::InvalidString { s: _s(a) });
     } else if is_argument(a) {
         if eat == 2 {
-            return Err(ParseError::InternalArgumentCanNotHaveArgument { arg: a.to_string() });
+            return Err(ParseError::InternalArgumentCanNotHaveArgument { arg: _s(a) });
         }
         index + 1
     } else if is_separator(a) {
@@ -140,9 +136,7 @@ pub fn next_index(argv: &[&str], index: usize, eat: usize) -> result::Result<usi
         if a.starts_with("--") {
             if let Some(i) = a.find('=') {
                 if eat == 1 {
-                    return Err(ParseError::FlagWithArgument {
-                        name: a[..i].to_string(),
-                    });
+                    return Err(ParseError::FlagWithArgument { name: _s(&a[..i]) });
                 } else {
                     assert_eq!(eat, 2);
                     index + 1
@@ -152,9 +146,7 @@ pub fn next_index(argv: &[&str], index: usize, eat: usize) -> result::Result<usi
                     if index + 1 < argv.len() && is_argument(argv[index + 1]) {
                         index + eat
                     } else {
-                        return Err(ParseError::OptionWithoutArgument {
-                            name: a.to_string(),
-                        });
+                        return Err(ParseError::OptionWithoutArgument { name: _s(a) });
                     }
                 } else {
                     index + eat
@@ -163,9 +155,7 @@ pub fn next_index(argv: &[&str], index: usize, eat: usize) -> result::Result<usi
         } else if a.len() > 2 {
             assert!(a.starts_with('-') && &a[1..2] != "-");
             if eat == 1 {
-                return Err(ParseError::FlagWithArgument {
-                    name: a[..2].to_string(),
-                });
+                return Err(ParseError::FlagWithArgument { name: _s(&a[..2]) });
             } else {
                 assert_eq!(eat, 2);
                 index + 1
@@ -174,9 +164,7 @@ pub fn next_index(argv: &[&str], index: usize, eat: usize) -> result::Result<usi
             if index + 1 < argv.len() && is_argument(argv[index + 1]) {
                 index + eat
             } else if eat == 2 {
-                return Err(ParseError::OptionWithoutArgument {
-                    name: a.to_string(),
-                });
+                return Err(ParseError::OptionWithoutArgument { name: _s(a) });
             } else {
                 assert_eq!(eat, 1);
                 index + 1
@@ -193,8 +181,6 @@ pub fn unwrap_argument<'s>(
     if let Some(a) = parse_result.1 {
         Ok(a)
     } else {
-        Err(ParseError::OptionWithoutArgument {
-            name: parse_result.0.to_string(),
-        })
+        Err(ParseError::OptionWithoutArgument { name: _s(parse_result.0) })
     }
 }
