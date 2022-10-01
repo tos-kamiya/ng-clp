@@ -241,4 +241,25 @@ mod test {
         let ni = next_index(&argv, 0, 2);
         assert_eq!(ni, Err(ParseError::InvalidString { s: "--=".to_string() }));
     }
+
+    #[test]
+    fn long_option_with_empty_value() {
+        let argv = vec!["--aa=", "2"];
+        let pr = parse(&argv, 0);
+        assert_eq!(pr, Ok(("--aa", Some(""))));
+        let pr = parse(&argv, 1);
+        assert_eq!(pr, Ok(("2", None)));
+
+        let ni = next_index(&argv, 0, 2);
+        assert_eq!(ni, Ok(1));
+        let ni = next_index(&argv, 0, 1);
+        assert_eq!(
+            ni,
+            Err(ParseError::FlagWithArgument {
+                name: "--aa".to_string()
+            })
+        );
+        let ni = next_index(&argv, 1, 1);
+        assert_eq!(ni, Ok(2));
+    }
 }
